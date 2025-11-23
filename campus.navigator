@@ -178,6 +178,7 @@ def main_menu():
         print("3. Plan a basic route")
         print("4. Exit")
         
+        
         choice = input("Enter your choice (1-4): ").strip()
 
         if choice == '1':
