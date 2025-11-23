@@ -1,4 +1,5 @@
-Problem Statement
+Problem Statement: 
+
 Navigating a large university campus can be a significant hurdle for new members of the community, leading to inefficiency and frustration. The absence of a simple, quick-reference tool for locating facilities and understanding campus layout necessitates the development of an accessible, text-based navigation system.
 Scope of the Project
 The scope of the Campus Pathfinder project is confined to a command-line interface (CLI) application developed exclusively in Python 3.x.
