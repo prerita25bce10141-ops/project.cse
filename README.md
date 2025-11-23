@@ -1,5 +1,7 @@
 Campus Pathfinder: University Navigation System
+
 Project Overview
+
 Campus Pathfinder is a simple, command-line interface (CLI) application developed in Python. It serves as a digital map and guidance system for a university campus, designed specifically to assist new students, visitors, and faculty in quickly locating essential buildings and generating basic, conceptual routes between two points.
 This project is built using fundamental Python concepts, primarily utilizing dictionaries and lists to manage the campus data, making it suitable for a first-year student's portfolio.
 Features
