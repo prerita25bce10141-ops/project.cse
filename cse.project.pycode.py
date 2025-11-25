@@ -1,0 +1,198 @@
+
+# File: campus_navigator.py
+# Description: A simple command-line campus navigation system using Python basics.
+# Features: Location Lookup, Location Filtering by Type, and Basic Route Planning.
+
+import time
+
+# --- Location Data ---
+CAMPUS_MAP = {
+    # Keys are Title Case for consistent lookups
+    "Lab Complex": {"type": "Academic", "neighbors": ["Academic Block 1", "Food Court"]},
+    "Academic Block 1": {"type": "Academic", "neighbors": ["Lab Complex", "Food Court", "Architecture Block"]},
+    "Architecture Block": {"type": "Academic", "neighbors": ["Academic Block 1", "Gate 2"]},
+    "Academic Block 2": {"type": "Academic", "neighbors": ["Boys Hostel", "Special Block"]}, 
+    "Special Block": {"type": "Academic", "neighbors": ["Academic Block 2", "Boys Hostel"]},
+
+    "Food Court": {"type": "Food/Cafe", "neighbors": ["Academic Block 1", "Architecture Block", "Lab Complex"]}, 
+    "Multi Purpose Hall": {"type": "Recreational", "neighbors": ["Academic Block 1", "Gate 1"]},
+    "Sports Field": {"type": "Recreational", "neighbors": ["Girls Hostel 1", "Girls Hostel 2"]},
+
+    "Girls Hostel 1": {"type": "Residence", "neighbors": ["Chancellor's Residence", "Sports Field"]},
+    "Girls Hostel 2": {"type": "Residence", "neighbors": ["Girls Hostel 1", "Academic Block 2"]},
+    "Boys Hostel": {"type": "Residence", "neighbors": ["Academic Block 2", "Special Block", "Faculty Block"]}, 
+    "Chancellor's Residence": {"type": "Residence", "neighbors": ["Girls Hostel 1"]},
+    "Faculty Block": {"type": "Residence", "neighbors": ["Boys Hostel"]},
+
+    "Gate 1": {"type": "Entry/Exit", "neighbors": ["Multi Purpose Hall"]},
+    "Gate 2": {"type": "Entry/Exit", "neighbors": ["Architecture Block", "Academic Block 1"]},
+}
+
+# --- Utility Functions ---
+def normalize_input(text):
+    """Converts input text to title case for consistent lookup."""
+    return text.strip().title()
+
+def validate_campus_map(campus_map):
+    """Checks the map for any neighbors that are not defined as primary locations."""
+    normalized_locations = {normalize_input(key) for key in campus_map.keys()}
+    missing_neighbors = set()
+    
+    for location, data in campus_map.items():
+        if 'neighbors' in data and isinstance(data['neighbors'], list):
+            for neighbor in data['neighbors']:
+                if normalize_input(neighbor) not in normalized_locations:
+                    missing_neighbors.add(neighbor)
+    
+    if missing_neighbors:
+        print("\n[CRITICAL DATA ERROR] The following locations are referenced as neighbors but are not defined as primary locations:")
+        print(f"Missing Keys: {', '.join(missing_neighbors)}")
+        return False
+        
+    print("\n[INFO] Campus Map successfully validated. All neighbors match primary keys.")
+    return True
+
+# --- Location Finder (FR01) ---
+def find_location_details():
+    """Prompts the user for a location name and prints its details."""
+    print("\n--- LOCATION DETAILS ---")
+    location_name = input("Enter the name of the location: ")
+    normalized_name = normalize_input(location_name)
+
+    if normalized_name in CAMPUS_MAP:
+        details = CAMPUS_MAP[normalized_name]
+        print(f"\nLocation Found: {normalized_name}")
+        print("-" * 30)
+        print(f"Type: {details['type']}")
+        print(f"Nearby Places: {', '.join(details['neighbors'])}")
+        print("-" * 30)
+    else:
+        print(f"\n[ERROR] Location '{location_name}' not found. Please check spelling.")
+
+# --- Location Filter (FR02) ---
+def filter_locations_by_type():
+    """Prompts the user for a location type and lists all matching locations."""
+    print("\n--- FILTER LOCATIONS ---")
+    
+    available_types = set(data['type'] for data in CAMPUS_MAP.values())
+    print("Available Location Types:")
+    print(f"[{' | '.join(available_types)}]")
+
+    location_type = input("Enter the type of location you want to see: ")
+    normalized_type = normalize_input(location_type)
+    
+    matching_locations = [name for name, data in CAMPUS_MAP.items() if data['type'] == normalized_type]
+
+    if matching_locations:
+        print(f"\nLocations of type '{normalized_type}':")
+        print("-" * 30)
+        print('\n'.join(f"- {loc}" for loc in matching_locations))
+        print("-" * 30)
+    else:
+        print(f"\n[INFO] No locations found for the type '{location_type}'.")
+
+
+# --- Basic Route Planner (FR03) ---
+def find_basic_route():
+    """Provides a simple, conceptual route between two locations using fixed hubs."""
+    print("\n--- BASIC ROUTE PLANNER ---")
+    
+    start = input("Enter your Starting Location: ").strip()
+    end = input("Enter your Destination Location: ").strip()
+    
+    start_norm = normalize_input(start)
+    end_norm = normalize_input(end)
+
+    # NFR04: Error handling for invalid locations
+    if start_norm not in CAMPUS_MAP or end_norm not in CAMPUS_MAP:
+        print("\n[ERROR] One or both locations are invalid. Please check the spelling.")
+        return
+
+    # NFR02: Simulate processing time
+    print("\nCalculating best path...")
+    time.sleep(1) 
+
+    conceptual_path = [start_norm]
+    start_type = CAMPUS_MAP[start_norm]['type']
+    end_type = CAMPUS_MAP[end_norm]['type']
+
+    if start_norm != end_norm:
+        
+        # Scenario 1: Going from Residence to Academic area
+        if start_type == 'Residence' and (end_type == 'Academic' or "Lab" in end_norm):
+            conceptual_path.append("Food Court (Central Meeting Point)")
+            conceptual_path.append("Academic Block 1 (Academic Hub)")
+
+        # Scenario 2: Entering campus
+        elif start_type == 'Entry/Exit' and end_type != 'Entry/Exit':
+            conceptual_path.append("Academic Block 1 (First Major Block)")
+        
+        # Scenario 3: Going between Academic Block 1 side and Boys Hostel side
+        academic_side_locations = ["Academic Block 1", "Architecture Block"]
+        residential_side_locations = ["Boys Hostel", "Faculty Block"]
+        
+        if (start_norm in academic_side_locations and end_norm in residential_side_locations) or \
+           (start_norm in residential_side_locations and end_norm in academic_side_locations):
+            if normalize_input(conceptual_path[-1]) != normalize_input("Boys Hostel"):
+                conceptual_path.append("Boys Hostel (Academic/Residence Link)")
+
+
+        # Add the final destination only if it wasn't already added as a hub
+        if normalize_input(conceptual_path[-1]) != end_norm:
+             conceptual_path.append(end_norm)
+
+
+    # Clean up duplicate stops
+    final_path = []
+    for stop in conceptual_path:
+        if not final_path or normalize_input(final_path[-1]) != normalize_input(stop):
+            final_path.append(stop)
+            
+    # Final path output
+    print("\nSuggested Conceptual Route:")
+    print("=" * 30)
+    print(f"Start: {final_path[0]}")
+    
+    for i in range(1, len(final_path) - 1):
+        print(f"Step {i}: Proceed towards {final_path[i]}")
+
+    if len(final_path) > 1:
+        print(f"Destination: {final_path[-1]} (You have arrived!)")
+    else:
+        print(f"Destination: {final_path[-1]} (You are already here!)")
+        
+    print("=" * 30)
+
+
+# --- Main Application Loop ---
+def main_menu():
+    """Displays the main menu and handles user selection."""
+    if not validate_campus_map(CAMPUS_MAP):
+        return
+
+    while True:
+        print("\n==================================")
+        print("    CAMPUSPATHFINDER NAVIGATOR    ")
+        print("==================================")
+        print("1. Find details of a specific location")
+        print("2. List locations by type")
+        print("3. Plan a basic route")
+        print("4. Exit")
+        
+        
+        choice = input("Enter your choice (1-4): ").strip()
+
+        if choice == '1':
+            find_location_details()
+        elif choice == '2':
+            filter_locations_by_type()
+        elif choice == '3':
+            find_basic_route()
+        elif choice == '4':
+            print("\nThank you for using CampusPathfinder. Goodbye!")
+            break
+        else:
+            print("\n[ERROR] Invalid choice. Please enter a number between 1 and 4.")
+
+if __name__ == "__main__":
+    main_menu()
